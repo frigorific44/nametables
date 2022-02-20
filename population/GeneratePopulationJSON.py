@@ -2,6 +2,9 @@ import csv
 import io
 import json
 import pycountry
+# This generates the JSON of country populations from the population csv sourced
+# at github.com/datasets/population.
+
 
 population = {}
 data_year = {}
