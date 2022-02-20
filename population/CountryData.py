@@ -15,6 +15,10 @@ import unicodedata2
 # ...
 # }
 
+SCRIPT_KEY = 'scripts' # The counts for the scripts used in names by type.
+NAME_KEY = 'names' # The total counts for names by type.
+SCRIPT_PERC_KEY = 'scripts percentage' # The proportion of each script in dataset by type.
+NAME_PERC_KEY = 'names percentage' # The percentage of total population for name count by type.
 MAXNAMES = 1000
 
 populations = None
@@ -43,15 +47,18 @@ for q in p.glob('*.csv'):
             if i >= MAXNAMES:
                 break
 
+    stotal = sum(scripts.values())
     if country not in data:
         data[country] = {
-            'scripts': {},
-            'size': {},
-            'pop_percent': {}
+            NAME_KEY: {},
+            NAME_PERC_KEY: {},
+            SCRIPT_KEY: {},
+            SCRIPT_PERC_KEY: {}
         }
-    data[country]['scripts'][type] = dict(scripts)
-    data[country]['size'][type] = total
-    data[country]['pop_percent'][type] = total / populations[country]
+    data[country][NAME_KEY][type] = total
+    data[country][NAME_PERC_KEY][type] = total / populations[country]
+    data[country][SCRIPT_KEY][type] = dict(scripts)
+    data[country][SCRIPT_PERC_KEY][type] = {k: v/stotal for k, v in scripts.items()}
 
 with io.open('countrydata.json', 'w', newline='', encoding='utf8') as f:
     json.dump(data, f, indent=4)
