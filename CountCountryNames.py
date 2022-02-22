@@ -3,6 +3,7 @@ from collections import Counter
 import io
 import json
 import sys
+from math import ceil
 from pathlib import Path
 
 # Female first names.
@@ -11,6 +12,8 @@ f_counts = Counter()
 m_counts = Counter()
 # Last names.
 l_counts = Counter()
+# Unknow gender names.
+u_counts = Counter()
 
 p = Path('data')
 for q in p.glob('*.csv'):
@@ -19,6 +22,7 @@ for q in p.glob('*.csv'):
     f_counts.clear()
     m_counts.clear()
     l_counts.clear()
+    u_counts.clear()
 
     # Get our counts.
     with q.open(newline='', encoding='utf8') as f:
@@ -28,14 +32,26 @@ for q in p.glob('*.csv'):
             last = row[1]
             gender = row[2]
 
+            # TODO: try to split name if given or family name is missing?
             if gender == 'F':
                 f_counts[first] += 1
             elif gender == 'M':
                 m_counts[first] += 1
+            else:
+                u_counts[first] += 1
             l_counts[last] += 1
         del f_counts['']
         del m_counts['']
         del l_counts['']
+        del u_counts['']
+        # Distribute genderless given names.
+        for n, count in u_counts.items():
+            fcount = f_counts[n]
+            mcount = m_counts[n]
+            denominator = fcount + mcount
+            if denominator > 0:
+                f_counts[n] += ceil(count * (fcount/(denominator)))
+                m_counts[n] += ceil(count * (mcount/(denominator)))
 
     # Save as CSV ordered by count.
     # Save female names.
