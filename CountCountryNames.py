@@ -52,6 +52,9 @@ for q in p.glob('*.csv'):
             if denominator > 0:
                 f_counts[n] += ceil(count * (fcount/(denominator)))
                 m_counts[n] += ceil(count * (mcount/(denominator)))
+        f_counts = +f_counts
+        m_counts = +m_counts
+        l_counts = +l_counts
 
     # Save as CSV ordered by count.
     # Save female names.
