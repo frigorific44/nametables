@@ -32,7 +32,7 @@ for q in p.glob('*.csv'):
             last = row[1]
             gender = row[2]
 
-            # TODO: try to split name if given or family name is missing?
+            # TODO: Spanish and Latin American naming conventions?
             if gender == 'F':
                 f_counts[first] += 1
             elif gender == 'M':
