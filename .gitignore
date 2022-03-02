@@ -2,3 +2,4 @@
 /data
 /counts
 /population/countrydata.json
+**/__pycache__
