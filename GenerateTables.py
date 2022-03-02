@@ -1,9 +1,26 @@
+import tableutility as tu
 import csv
+from enum import Enum
 import io
 import json
 from pathlib import Path
+import pycountry
+import sys
 
+class ResultType(Enum):
+    TEXT = 0
+    DOCUMENT = 1
+    COMPENDIUM = 2
 
+SymbolCategory = {
+    'F': 'F Given',
+    'M': 'M Given',
+    'L': 'Surname'
+}
+
+OUTPUT_PATH = Path(sys.argv[1])
+if not OUTPUT_PATH.is_dir():
+    raise Exception("The path argument does not point to a directory.")
 SCRIPT_THRESHOLD = 0.01
 
 with io.open('population/countrydata.json', 'r', encoding='utf8') as f:
@@ -77,13 +94,13 @@ typeFailed = countrytables - typePassed
 # print(sorted(typeFailed))
 
 testFailures = [genderFailed, quantityFailed, scriptFailed, typeFailed]
-print('    G Q S T')
-for c in sorted(countrytables):
-    s = c + ' ' * 2
-    for t in testFailures:
-        s += 'x' if c in t else ' '
-        s += ' '
-    print(s)
+# print('    G Q S T')
+# for c in sorted(countrytables):
+#     s = c + ' ' * 2
+#     for t in testFailures:
+#         s += 'x' if c in t else ' '
+#         s += ' '
+#     print(s)
 
 with io.open('datachecks.csv', 'w', newline='', encoding='utf8') as f:
     writer = csv.writer(f)
@@ -95,3 +112,33 @@ with io.open('datachecks.csv', 'w', newline='', encoding='utf8') as f:
 
 # When iterating, keep track of the timestamp for when files we process were
 # last modified, so we can check if this gets run again to only process new files.
+passed = sorted(countrytables.difference(*testFailures))
+
+src_tables = []
+user_tables = []
+user_macros = []
+packs_dir_path = (OUTPUT_PATH / 'packs').resolve()
+packs_dir_path.mkdir(exist_ok=True)
+counts_dir_path = Path('counts')
+for c in passed:
+    c_name = pycountry.countries.get(alpha_2=c).name
+    categories = set()
+    for q in counts_dir_path.glob(f'{c}-*.csv'):
+        category = SymbolCategory[q.stem.split('-')[-1]]
+        categories.add(category)
+        tablename = f'{c_name} - {category}'
+        with q.open(newline='', encoding='utf8') as f:
+            table = tu.from_csv(f, tablename, ResultType.TEXT.value)
+            table_json = json.dumps(table, separators=(',', ':'))
+            src_tables.append(table_json)
+    # tu.from_csv(f, tname, type, size=2)
+
+
+src_tables_path = (packs_dir_path / 'where-src-tables.db').resolve()
+src_tables_path.write_text('\n'.join(src_tables), encoding='utf8')
+
+user_tables_path = (packs_dir_path / 'where-user-tables.db').resolve()
+user_tables_path.write_text('\n'.join(user_tables), encoding='utf8')
+
+user_macros_path = (packs_dir_path / 'where-user-macros.db').resolve()
+user_macros_path.write_text('\n'.join(user_macros), encoding='utf8')
