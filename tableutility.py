@@ -37,33 +37,6 @@ def make_macro(id):
         '''
     )
 
-def make_table(tname, entries, weights, type=ResultType.TEXT.value):
-    results = []
-    i = 0
-    for name, weight in zip(entries, weights):
-        lower = i + 1
-        i += weight
-        upper = i + weight
-        r = {
-            '_id': generate_id(),
-            'type': type,
-            'text': name,
-            'weight': weight,
-            'range': [lower, i]
-        }
-        results.append(r)
-
-    rolltable = {
-        '_id': generate_id(),
-        'name': tname,
-        'descriptiion': '?',
-        'results': results,
-        'formula': f'1d{sum(weights)}',
-        'replacement': True,
-        'displayRoll': False,
-    }
-    return rolltable
-
 def make_table(tname, results, formula, replace=True, display=False):
     rolltable = {
         '_id': generate_id(),
