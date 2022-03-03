@@ -1,19 +1,43 @@
 import apportionment.apportionment.methods as apportion
 import csv
+from enum import Enum
 import io
 import json
 import pycountry
 import random
 import string
 
+class ResultType(Enum):
+    TEXT = 0
+    DOCUMENT = 1
+    COMPENDIUM = 2
+
 
 def generate_id(size=16, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
-def make_macro():
-    pass
+def make_macro(id):
+    return (
+        f'const table = game.tables.find(t => t._id === {id})'
+        '''
+        const results = await table.draw().results
+        const rString = results.reduce(concatResult, "")
 
-def make_table(tname, entries, weights, type):
+        function  concatResult(s, result) {
+            return s + "\n" + result.data.text
+        }
+
+        function fPrintMessage(message) {
+            let chatData = {
+                user: game.user._id,
+                content: message,
+            };
+            ChatMessage.create(chatData,{})
+        }
+        '''
+    )
+
+def make_table(tname, entries, weights, type=ResultType.TEXT.value):
     results = []
     i = 0
     for name, weight in zip(entries, weights):
@@ -37,12 +61,10 @@ def make_table(tname, entries, weights, type):
         'formula': f'1d{sum(weights)}',
         'replacement': True,
         'displayRoll': False,
-        # 'permission': {},
-        'flags': {}
     }
     return rolltable
 
-def from_csv(f, tname, type, size=1000, votes=2000):
+def from_csv(f, tname, type=ResultType.TEXT.value, size=1000, votes=2000):
     reader = csv.reader(f)
     names = []
     counts = []
@@ -58,30 +80,28 @@ def from_csv(f, tname, type, size=1000, votes=2000):
     )
 
     return make_table(tname, names, apportionment, type)
-    # results = []
-    # i = 0
-    # for name, weight in zip(names, apportionment):
-    #     lower = i + 1
-    #     i += weight
-    #     upper = i + weight
-    #     r = {
-    #         '_id': generate_id(),
-    #         'type': type,
-    #         'text': name,
-    #         'weight': weight,
-    #         'range': [lower, i]
-    #     }
-    #     results.append(r)
-    #
-    # rolltable = {
-    #     '_id': generate_id(),
-    #     'name': tname,
-    #     'descriptiion': '?',
-    #     'results': results,
-    #     'formula': f'1d{votes}',
-    #     'replacement': True,
-    #     'displayRoll': False,
-    #     # 'permission': {},
-    #     'flags': {}
-    # }
-    # return rolltable
+
+def from_comp_tables(tname, tables, collectionName):
+    results = []
+    for table in tables:
+        r = {
+            '_id': generate_id(),
+            'type': ResultType.COMPENDIUM.value,
+            'text': table['name'],
+            'collection': collectionName,
+            'resultId': table['_id'],
+            'weight': 1,
+            'range': [1, 1]
+        }
+        results.append(r)
+
+    rolltable = {
+        '_id': generate_id(),
+        'name': tname,
+        'descriptiion': '?',
+        'results': results,
+        'formula': '1d1',
+        'replacement': True,
+        'displayRoll': False
+    }
+    return rolltable

@@ -1,18 +1,13 @@
 import tableutility as tu
 import csv
-from enum import Enum
 import io
 import json
 from pathlib import Path
 import pycountry
 import sys
 
-class ResultType(Enum):
-    TEXT = 0
-    DOCUMENT = 1
-    COMPENDIUM = 2
 
-SymbolCategory = {
+symbol_category = {
     'F': 'F Given',
     'M': 'M Given',
     'L': 'Surname'
@@ -122,23 +117,34 @@ packs_dir_path.mkdir(exist_ok=True)
 counts_dir_path = Path('counts')
 for c in passed:
     c_name = pycountry.countries.get(alpha_2=c).name
-    categories = set()
+    c_tables = {}
     for q in counts_dir_path.glob(f'{c}-*.csv'):
-        category = SymbolCategory[q.stem.split('-')[-1]]
-        categories.add(category)
+        cat_symbol = q.stem.split('-')[-1]
+        category = symbol_category[cat_symbol]
         tablename = f'{c_name} - {category}'
         with q.open(newline='', encoding='utf8') as f:
-            table = tu.from_csv(f, tablename, ResultType.TEXT.value)
+            table = tu.from_csv(f, tablename)
+            c_tables[cat_symbol] = table
             table_json = json.dumps(table, separators=(',', ':'))
             src_tables.append(table_json)
+    f_table = tu.from_comp_tables(
+        f'{c_name} - F', [c_tables['F'], c_tables['L']], 'who-in-the-world.witw-src-tables'
+    )
+    m_table = tu.from_comp_tables(
+        f'{c_name} - M', [c_tables['M'], c_tables['L']], 'who-in-the-world.witw-src-tables'
+    )
+    c_table = tu.from_comp_tables(
+        c_name, [f_table, m_table], 'who-in-the-world.witw-user-tables'
+    )
+    user_tables.extend(map(lambda t:json.dumps(t,separators=(',',':')),[f_table,m_table,c_table]))
     # tu.from_csv(f, tname, type, size=2)
 
 
-src_tables_path = (packs_dir_path / 'where-src-tables.db').resolve()
+src_tables_path = (packs_dir_path / 'witw-src-tables.db').resolve()
 src_tables_path.write_text('\n'.join(src_tables), encoding='utf8')
 
-user_tables_path = (packs_dir_path / 'where-user-tables.db').resolve()
+user_tables_path = (packs_dir_path / 'witw-user-tables.db').resolve()
 user_tables_path.write_text('\n'.join(user_tables), encoding='utf8')
 
-user_macros_path = (packs_dir_path / 'where-user-macros.db').resolve()
+user_macros_path = (packs_dir_path / 'witw-user-macros.db').resolve()
 user_macros_path.write_text('\n'.join(user_macros), encoding='utf8')
