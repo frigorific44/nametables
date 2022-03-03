@@ -64,7 +64,19 @@ def make_table(tname, entries, weights, type=ResultType.TEXT.value):
     }
     return rolltable
 
-def from_csv(f, tname, type=ResultType.TEXT.value, size=1000, votes=2000):
+def make_table(tname, results, formula, replace=True, display=False):
+    rolltable = {
+        '_id': generate_id(),
+        'name': tname,
+        'descriptiion': '',
+        'results': results,
+        'formula': formula,
+        'replacement': replace,
+        'displayRoll': display,
+    }
+    return rolltable
+
+def from_csv(f, tname, size=1000, votes=2000):
     reader = csv.reader(f)
     names = []
     counts = []
@@ -79,7 +91,22 @@ def from_csv(f, tname, type=ResultType.TEXT.value, size=1000, votes=2000):
         'hill', counts, votes, parties=names, verbose=False, fractions=False
     )
 
-    return make_table(tname, names, apportionment, type)
+    results = []
+    i = 0
+    for name, weight in zip(names, apportionment):
+        lower = i + 1
+        i += weight
+        upper = i + weight
+        r = {
+            '_id': generate_id(),
+            'type': ResultType.TEXT.value,
+            'text': name,
+            'weight': weight,
+            'range': [lower, i]
+        }
+        results.append(r)
+
+    return make_table(tname, results, f'1d{sum(apportionment)}')
 
 def from_comp_tables(tname, tables, collectionName):
     results = []
@@ -95,13 +122,4 @@ def from_comp_tables(tname, tables, collectionName):
         }
         results.append(r)
 
-    rolltable = {
-        '_id': generate_id(),
-        'name': tname,
-        'descriptiion': '?',
-        'results': results,
-        'formula': '1d1',
-        'replacement': True,
-        'displayRoll': False
-    }
-    return rolltable
+    return make_table(tname, results, '1d1')
