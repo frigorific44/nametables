@@ -16,6 +16,15 @@ class ResultType(Enum):
 def generate_id(size=16, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
+def get_rranges(weights):
+    rranges = []
+    i = 0
+    for weight in weights:
+        lower = i + 1
+        i += weight
+        rranges.append([lower, i])
+    return rranges
+
 def make_macro(id):
     return (
         f'const table = game.tables.find(t => t._id === {id})'
@@ -65,34 +74,36 @@ def from_csv(f, tname, size=1000, votes=2000):
     )
 
     results = []
-    i = 0
-    for name, weight in zip(names, apportionment):
-        lower = i + 1
-        i += weight
-        upper = i + weight
+    rranges = get_rranges(apportionment)
+    for name, weight, range in zip(names, apportionment, rranges):
         r = {
             '_id': generate_id(),
             'type': ResultType.TEXT.value,
             'text': name,
             'weight': weight,
-            'range': [lower, i]
+            'range': range
         }
         results.append(r)
 
     return make_table(tname, results, f'1d{sum(apportionment)}')
 
-def from_comp_tables(tname, tables, collectionName):
+def from_comp_tables(tname, tables, collectionName, weights=None):
+    if weights:
+        rranges = get_rranges(weights)
+    else:
+        weights = [1 for i in range(len(tables))]
+        rranges = [[1, 1] for i in range(len(tables))]
     results = []
-    for table in tables:
+    for table, weight, rrange in zip(tables, weights, rranges):
         r = {
             '_id': generate_id(),
             'type': ResultType.COMPENDIUM.value,
             'text': table['name'],
             'collection': collectionName,
             'resultId': table['_id'],
-            'weight': 1,
-            'range': [1, 1]
+            'weight': weight,
+            'range': rrange
         }
         results.append(r)
 
-    return make_table(tname, results, '1d1')
+    return make_table(tname, results, f'1d{rranges[-1][-1]}')
