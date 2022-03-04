@@ -134,7 +134,7 @@ for c in passed:
         f'{c_name} - M', [c_tables['M'], c_tables['L']], 'who-in-the-world.witw-src-tables'
     )
     c_table = tu.from_comp_tables(
-        c_name, [f_table, m_table], 'who-in-the-world.witw-user-tables'
+        c_name, [f_table, m_table], 'who-in-the-world.witw-user-tables', [1, 1]
     )
     user_tables.extend(map(lambda t:json.dumps(t,separators=(',',':')),[f_table,m_table,c_table]))
     # tu.from_csv(f, tname, type, size=2)
