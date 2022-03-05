@@ -11,7 +11,9 @@ class ResultType(Enum):
     TEXT = 0
     DOCUMENT = 1
     COMPENDIUM = 2
-
+class MacroType(Enum):
+    CHAT = 'chat'
+    SCRIPT = 'script'
 
 def generate_id(size=16, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
@@ -25,26 +27,40 @@ def get_rranges(weights):
         rranges.append([lower, i])
     return rranges
 
-def make_macro(id):
-    return (
-        f'const table = game.tables.find(t => t._id === {id})'
-        '''
-        const results = await table.draw().results
-        const rString = results.reduce(concatResult, "")
+def make_macro(name, tableId, type=MacroType.SCRIPT.value):
+    cmd = (
+'''
+const pack = game.packs.get("who-in-the-world.witw-user-tables")
+'''
+f'const table = await pack.getDocument("{tableId}")'
+'''
+const roll = await table.roll()
+const rString = roll.results.reduce(concatResult, "")
+fPrintMessage(rString)
 
-        function  concatResult(s, result) {
-            return s + "\n" + result.data.text
-        }
+function  concatResult(s, result) {
+    return s + "\\n" + result.data.text
+}
 
-        function fPrintMessage(message) {
-            let chatData = {
-                user: game.user._id,
-                content: message,
-            };
-            ChatMessage.create(chatData,{})
-        }
-        '''
+function fPrintMessage(message) {
+    let chatData = {
+        user: game.user._id,
+        content: message,
+    };
+    ChatMessage.create(chatData,{})
+}
+'''
     )
+    m = {
+        '_id': generate_id(),
+        'name': name,
+        'type': type,
+        'author': '0hNxyZp41uLKpCTW',
+        'scope': 'global',
+        'command': cmd,
+    }
+    return m
+
 
 def make_table(tname, results, formula, replace=True, display=False):
     rolltable = {
