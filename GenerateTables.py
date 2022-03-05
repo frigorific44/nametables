@@ -136,8 +136,12 @@ for c in passed:
     c_table = tu.from_comp_tables(
         c_name, [f_table, m_table], 'who-in-the-world.witw-user-tables', [1, 1]
     )
+    f_macro = tu.make_macro(f_table['name'], f_table['_id'])
+    m_macro = tu.make_macro(m_table['name'], m_table['_id'])
+    c_macro = tu.make_macro(c_table['name'], c_table['_id'])
+
     user_tables.extend(map(lambda t:json.dumps(t,separators=(',',':')),[f_table,m_table,c_table]))
-    # tu.from_csv(f, tname, type, size=2)
+    user_macros.extend(map(lambda t:json.dumps(t,separators=(',',':')),[f_macro, m_macro, c_macro]))
 
 
 src_tables_path = (packs_dir_path / 'witw-src-tables.db').resolve()
