@@ -30,24 +30,33 @@ def get_rranges(weights):
 def make_macro(name, tableId, type=MacroType.SCRIPT.value):
     cmd = (
 '''
+const num = 10
+
 const pack = game.packs.get("who-in-the-world.witw-user-tables")
 '''
 f'const table = await pack.getDocument("{tableId}")'
 '''
-const roll = await table.roll()
-const rString = roll.results.reduce(concatResult, "")
+const roll = await table.drawMany(num, {displayChat: false})
+const subdivisions = subdivide(roll.results, num)
+const nameStrings = subdivisions.map(x => x.map(y => y.data.text).join(" "))
+const formattedStrings = nameStrings.map(x => `<p>${x}</p>`)
+const rString = formattedStrings.join(" ")
 fPrintMessage(rString)
 
-function  concatResult(s, result) {
-    return s + "\\n" + result.data.text
-}
 
 function fPrintMessage(message) {
-    let chatData = {
-        user: game.user._id,
-        content: message,
-    };
-    ChatMessage.create(chatData,{})
+  let chatData = {
+    user: game.user._id,
+    content: message,
+  };
+  ChatMessage.create(chatData,{})
+}
+
+function subdivide(arr, numGroups) {
+  const perGroup = Math.ceil(arr.length / numGroups);
+  return new Array(numGroups)
+    .fill('')
+    .map((_, i) => arr.slice(i * perGroup, (i + 1) * perGroup));
 }
 '''
     )
