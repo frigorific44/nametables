@@ -100,15 +100,15 @@ typeFailed = countrytables - typePassed
 # print(sorted(typeFailed))
 
 testFailures = [genderFailed, quantityFailed, scriptFailed, typeFailed]
-if args.VERBOSE:
-    print('    G Q S T')
-    for c in sorted(countrytables):
-        s = c + ' ' * 2
-        for t in testFailures:
-            s += 'x' if c in t else ' '
-            s += ' '
-        print(s)
 if args.RUN_CHECKS:
+    if args.VERBOSE:
+        print('    G Q S T')
+        for c in sorted(countrytables):
+            s = c + ' ' * 2
+            for t in testFailures:
+                s += 'x' if c in t else ' '
+                s += ' '
+            print(s)
     with io.open('datachecks.csv', 'w', newline='', encoding='utf8') as f:
         writer = csv.writer(f)
         writer.writerow(('Country', 'Gender', 'Quantity', 'Script', 'Type', 'Population'))
