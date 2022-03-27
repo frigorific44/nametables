@@ -1,5 +1,5 @@
 # The dataset sources are listed in the markdown in data as well as the README
-/data/*/*.csv
+**/data/*/*.csv
 /counts
-/population/countrydata.json
+**/population/countrydata.json
 **/__pycache__
