@@ -50,7 +50,7 @@ class NameCounter(object):
         self.l = +self.l
         self.u = +self.u
 
-    def write_counts(self, par_dir='../counts'):
+    def write_counts(self, par_dir='counts'):
         with io.open(par_dir+f'/{self.country}-F.csv', 'w', newline='', encoding='utf8') as file:
             writer = csv.writer(file)
             writer.writerow(('Total', self.f.total()))

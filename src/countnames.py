@@ -11,7 +11,7 @@ def CountNameDataset():
     count_l = lambda t: (t[1],1)
     count_u = lambda t: (t[0],1) if (t[2] != 'F' and t[2] != 'M') else ('', 0)
 
-    p = Path('name-dataset')
+    p = Path('data/name-dataset')
     for q in p.glob('*.csv'):
         country = str(q).split('.')[-2].split('\\')[-1]
         print(country)
@@ -27,9 +27,9 @@ def CountNameDataset():
 def CountChineseNames():
     cn_nc = NameCounter('CN')
 
-    with io.open('chinese-names/familyname.csv', 'r', newline='', encoding='utf8') as f:
+    with io.open('data/chinese-names/familyname.csv', 'r', newline='', encoding='utf8') as f:
         cn_nc.count_csv(f, skipfirst=True, count_l= lambda t: (t[0], t[4]))
-    with io.open('chinese-names/top1000name.prov.csv', 'r', newline='', encoding='utf8') as f:
+    with io.open('data/chinese-names/top1000name.prov.csv', 'r', newline='', encoding='utf8') as f:
         cn_nc.count_csv(f, skipfirst=True, count_f=lambda t:(t[0],t[2]), count_m=lambda t:(t[0],t[1]))
 
     cn_nc.cleanup()
@@ -37,5 +37,5 @@ def CountChineseNames():
     cn_nc.write_counts()
 
 if __name__ == "__main__":
-    # CountNameDataset()
+    CountNameDataset()
     CountChineseNames()
