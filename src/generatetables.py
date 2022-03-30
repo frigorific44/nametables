@@ -33,95 +33,66 @@ countrytables = set(countrydata.keys())
 with io.open('population/population.json', 'r', encoding='utf8') as f:
     population = json.load(f)
 
-transliterations = {}
+transcriptions = {}
+class DataChecks(object):
+    def gender_representation_filter(country):
+        f = countrydata[country]['names']['F']
+        m = countrydata[country]['names']['M']
+        diff = abs((f - m) / m)
+        return diff < 0.5
+
+    # def language_representation_filter(country):
+    #     pass
+
+    def quantity_filter(country):
+        p = countrydata[country]['names percentage']['L']
+        c = countrydata[country]['names']['L']
+        return p > 0.01 and c > 100000
+
+    def script_support_filter(country):
+        for scripts in countrydata[country]['scripts percentage'].values():
+            for s, p in scripts.items():
+                if p > SCRIPT_THRESHOLD and s not in transcriptions and s != 'Latin':
+                    return False
+        return True
+
+    def type_representation_filter(country):
+        f = countrydata[country]['names percentage']['F']
+        l = countrydata[country]['names percentage']['L']
+        m = countrydata[country]['names percentage']['M']
+        diff = abs(((f + m) - l) / l)
+        return diff < 0.01
+
+checks = filter(lambda x: not x.startswith('__'), dir(DataChecks))
+failed = {}
+for check in checks:
+    p = set(filter(getattr(DataChecks, check), countrytables))
+    f = countrytables - p
+    failed[check] = f
 
 
-
-def getGenderDiff(country):
-    f = countrydata[country]['names']['F']
-    m = countrydata[country]['names']['M']
-    return (f - m) / m
-
-def getTypeDiff(country):
-    f = countrydata[country]['names percentage']['F']
-    l = countrydata[country]['names percentage']['L']
-    m = countrydata[country]['names percentage']['M']
-    return ((f + m) - l) / l
-
-
-
-# Filter on whether each gender is sufficiently represented.
-def genderRepresentationFilter(country):
-    return abs(getGenderDiff(country)) < 0.5
-
-# Filter on whether the scripts present are representative
-# of the country's languages.
-def languageRepresentationFilter(country):
-    pass
-
-# Filter on whether there are sufficient numbers or at least
-# a sufficient percentage compared to the actual population.
-def quantityFilter(country):
-    p = countrydata[country]['names percentage']['L']
-    c = countrydata[country]['names']['L']
-    return p > 0.01 and c > 100000
-
-# Filter on whether scripts present are supported by the current pipeline.
-def scriptSupportFilter(country):
-    for scripts in countrydata[country]['scripts percentage'].values():
-        for s, p in scripts.items():
-            if p > SCRIPT_THRESHOLD and s not in transliterations and s != 'Latin':
-                return False
-    return True
-
-# Filter on whether there is not too great a disparity
-# between representation of each name type.
-def typeRepresentationFilter(country):
-    return abs(getTypeDiff(country)) < 0.01
-
-
-
-# print(*sorted([(k,getGenderDiff(k)) for k in countrytables], key=lambda y:y[1]), sep='\n')
-genderPassed = set(filter(genderRepresentationFilter, countrytables))
-genderFailed = countrytables - genderPassed
-# print(sorted(genderFailed))
-
-quantityPassed = set(filter(quantityFilter, countrytables))
-quantityFailed = countrytables - quantityPassed
-# print(sorted(quantityFailed))
-
-scriptPassed = set(filter(scriptSupportFilter, countrytables))
-scriptFailed = countrytables - scriptPassed
-# print(sorted(scriptFailed))
-
-# print(*sorted([(k,getTypeDiff(k)) for k in countrytables], key=lambda y:y[1]), sep='\n')
-typePassed = set(filter(typeRepresentationFilter, countrytables))
-typeFailed = countrytables - typePassed
-# print(sorted(typeFailed))
-
-testFailures = [genderFailed, quantityFailed, scriptFailed, typeFailed]
 if args.RUN_CHECKS:
     if args.VERBOSE:
-        print('    G Q S T')
+        print('    ' + ' '.join([k.upper()[0] for k in failed.keys()]))
         for c in sorted(countrytables):
             s = c + ' ' * 2
-            for t in testFailures:
+            for t in failed.values():
                 s += 'x' if c in t else ' '
                 s += ' '
             print(s)
     with io.open('../datachecks.csv', 'w', newline='', encoding='utf8') as f:
         writer = csv.writer(f)
-        writer.writerow(('Country', 'Gender', 'Quantity', 'Script', 'Type', 'Population'))
+        writer.writerow(('Country', *(k.split('_')[0].capitalize() for k in failed.keys()), 'Population'))
         rows = []
         for c in sorted(countrytables):
-            rows.append((c, *('x' if c in t else '' for t in testFailures), population[c]))
+            rows.append((c, *('x' if c in t else '' for t in failed.values()), population[c]))
         rows.sort(key=lambda r: r[-1], reverse=True)
         writer.writerows(rows)
 
 if args.GENERATE_TABLES:
     # When iterating, keep track of the timestamp for when files we process were
     # last modified, so we can check if this gets run again to only process new files.
-    passed = sorted(countrytables.difference(*testFailures))
+    passed = sorted(countrytables.difference(*failed))
 
     src_tables = []
     user_tables = []
