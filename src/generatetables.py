@@ -109,7 +109,7 @@ if args.RUN_CHECKS:
                 s += 'x' if c in t else ' '
                 s += ' '
             print(s)
-    with io.open('datachecks.csv', 'w', newline='', encoding='utf8') as f:
+    with io.open('../datachecks.csv', 'w', newline='', encoding='utf8') as f:
         writer = csv.writer(f)
         writer.writerow(('Country', 'Gender', 'Quantity', 'Script', 'Type', 'Population'))
         rows = []
