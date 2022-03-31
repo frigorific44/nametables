@@ -1,7 +1,7 @@
 from namecounter import NameCounter
 import io
 import qazaq_transliterator
-from population import unicodedata2 as ud2
+from population import unicodedata2
 
 
 def transliterate_country(country, translit):
@@ -21,12 +21,15 @@ transliterated = []
 # Kazakhstan
 kz = 'KZ'
 def kz_translit(s):
-    cat = ud2.script_cat(s[0])[0]
-    if cat == 'Latin':
+    script = unicodedata2.string_script(s)
+    if script == 'Latin':
         return s
-    elif cat == 'Cyrillic':
+    elif script == 'Cyrillic':
         return qazaq_transliterator.translit(s)
     else:
         return ''
-transliterate_country(kz, kz_translit)
-transliterated.append(kz)
+        
+
+if __name__ == "__main__":
+    transliterate_country(kz, kz_translit)
+    transliterated.append(kz)
