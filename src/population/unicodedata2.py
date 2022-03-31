@@ -577,6 +577,13 @@ def category(chr):
     _, a = script_cat(chr)
     return a
 
+def string_script(s):
+    for c in s:
+        a = script(c)
+        if a != 'Common':
+            return a
+    return 'Common'
+
 def _compile_scripts_txt():
     # build indexes from 'scripts.txt'
 

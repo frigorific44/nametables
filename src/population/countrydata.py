@@ -39,11 +39,8 @@ for q in p.glob('*.csv'):
 
         for i, row in enumerate(countreader):
             name, count = row
-            for c in name:
-                script = unicodedata2.script_cat(c)[0]
-                if script != 'Common':
-                    scripts[script] += int(count)
-                    break
+            scripts[unicodedata2.string_script(name)] += int(count)
+
             if i >= MAXNAMES:
                 break
 
