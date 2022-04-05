@@ -15,7 +15,8 @@ class MacroType(Enum):
     CHAT = 'chat'
     SCRIPT = 'script'
 
-def generate_id(size=16, chars=string.ascii_uppercase + string.digits):
+def generate_id(size=16, chars=string.ascii_uppercase + string.digits, seed=None):
+    random.seed(seed)
     return ''.join(random.choice(chars) for _ in range(size))
 
 def get_rranges(weights):
@@ -61,7 +62,7 @@ function subdivide(arr, numGroups) {
 '''
     )
     m = {
-        '_id': generate_id(),
+        '_id': generate_id(seed=name+"m"),
         'name': name,
         'type': type,
         'author': '0hNxyZp41uLKpCTW',
@@ -71,9 +72,9 @@ function subdivide(arr, numGroups) {
     return m
 
 
-def make_table(tname, results, formula, replace=True, display=False):
+def make_table(tname, results, formula, replace=True, display=False, seed=None):
     rolltable = {
-        '_id': generate_id(),
+        '_id': generate_id(seed=seed),
         'name': tname,
         'descriptiion': '',
         'results': results,
@@ -102,7 +103,7 @@ def from_csv(f, tname, size=1000, votes=2000):
     rranges = get_rranges(apportionment)
     for name, weight, range in zip(names, apportionment, rranges):
         r = {
-            '_id': generate_id(),
+            '_id': generate_id(seed=tname+name),
             'type': ResultType.TEXT.value,
             'text': name,
             'weight': weight,
@@ -110,7 +111,7 @@ def from_csv(f, tname, size=1000, votes=2000):
         }
         results.append(r)
 
-    return make_table(tname, results, f'1d{sum(apportionment)}')
+    return make_table(tname, results, f'1d{sum(apportionment)}', seed=tname+"c")
 
 def from_comp_tables(tname, tables, collectionName, weights=None):
     if weights:
@@ -121,7 +122,7 @@ def from_comp_tables(tname, tables, collectionName, weights=None):
     results = []
     for table, weight, rrange in zip(tables, weights, rranges):
         r = {
-            '_id': generate_id(),
+            '_id': generate_id(seed=tname+table['name']),
             'type': ResultType.COMPENDIUM.value,
             'text': table['name'],
             'collection': collectionName,
@@ -131,4 +132,4 @@ def from_comp_tables(tname, tables, collectionName, weights=None):
         }
         results.append(r)
 
-    return make_table(tname, results, f'1d{rranges[-1][-1]}')
+    return make_table(tname, results, f'1d{rranges[-1][-1]}', seed=tname+"t")
