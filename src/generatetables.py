@@ -97,7 +97,7 @@ if args.GENERATE_TABLES:
     src_tables = []
     user_tables = []
     user_macros = []
-    packs_dir_path = (OUTPUT_PATH / 'packs').resolve()
+    packs_dir_path = (args.OUTPUT_PATH / 'packs').resolve()
     packs_dir_path.mkdir(exist_ok=True)
     counts_dir_path = Path('counts')
     for c in passed:
