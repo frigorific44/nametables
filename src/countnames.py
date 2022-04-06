@@ -3,6 +3,7 @@ from collections import Counter
 from namecounter import NameCounter
 import io
 from pathlib import Path
+from tqdm import tqdm
 
 
 def CountNameDataset():
@@ -12,7 +13,7 @@ def CountNameDataset():
     count_u = lambda t: (t[0],1) if (t[2] != 'F' and t[2] != 'M') else ('', 0)
 
     p = Path('data/name-dataset')
-    for q in p.glob('*.csv'):
+    for q in tqdm(sorted(p.glob('*.csv'))):
         country = str(q).split('.')[-2].split('\\')[-1]
         print(country)
         nc = NameCounter(country)
@@ -28,9 +29,9 @@ def CountChineseNames():
     cn_nc = NameCounter('CN')
 
     with io.open('data/chinese-names/familyname.csv', 'r', newline='', encoding='utf8') as f:
-        cn_nc.count_csv(f, skipfirst=True, count_l= lambda t: (t[0], t[4]))
+        cn_nc.count_csv(f, count_l=lambda t: (t[0], t[4]), skipfirst=True)
     with io.open('data/chinese-names/top1000name.prov.csv', 'r', newline='', encoding='utf8') as f:
-        cn_nc.count_csv(f, skipfirst=True, count_f=lambda t:(t[0],t[2]), count_m=lambda t:(t[0],t[1]))
+        cn_nc.count_csv(f, count_f=lambda t:(t[0],t[2]), count_m=lambda t:(t[0],t[1]), skipfirst=True)
 
     cn_nc.cleanup()
     cn_nc.distribute_unknown()
