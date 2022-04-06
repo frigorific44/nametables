@@ -15,9 +15,10 @@ class NameCounter(object):
         self.u = Counter()
 
     def count_csv(
-            self, file, skipfirst=False,
+            self, file,
             count_f=lambda t:('',0), count_m=lambda t:('',0),
-            count_l=lambda t:('',0), count_u=lambda t:('',0)):
+            count_l=lambda t:('',0), count_u=lambda t:('',0),
+            skipfirst=False):
         namereader = csv.reader(file, delimiter=',', quotechar='"')
         if skipfirst:
             namereader.__next__()
@@ -33,12 +34,13 @@ class NameCounter(object):
 
     def distribute_unknown(self):
         for name, count in self.u.items():
-            fcount = f_counts[name]
-            mcount = m_counts[name]
+            fcount = self.f[name]
+            mcount = self.m[name]
             denominator = fcount + mcount
             if denominator > 0:
                 self.f[name] += ceil(count * (fcount/(denominator)))
                 self.m[name] += ceil(count * (mcount/(denominator)))
+        self.u.clear()
 
     def cleanup(self):
         del self.f['']
@@ -55,12 +57,10 @@ class NameCounter(object):
             writer = csv.writer(file)
             writer.writerow(('Total', self.f.total()))
             writer.writerows(list(self.f.most_common()))
-        # Save male names.
         with io.open(par_dir+f'/{self.country}-M.csv', 'w', newline='', encoding='utf8') as file:
             writer = csv.writer(file)
             writer.writerow(('Total', self.m.total()))
             writer.writerows(list(self.m.most_common()))
-        #Save last names.
         with io.open(par_dir+f'/{self.country}-L.csv', 'w', newline='', encoding='utf8') as file:
             writer = csv.writer(file)
             writer.writerow(('Total', self.l.total()))

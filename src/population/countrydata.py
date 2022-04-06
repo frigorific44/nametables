@@ -55,7 +55,7 @@ for q in p.glob('*.csv'):
     data[country][NAME_KEY][type] = total
     data[country][NAME_PERC_KEY][type] = total / populations[country]
     data[country][SCRIPT_KEY][type] = dict(scripts)
-    data[country][SCRIPT_PERC_KEY][type] = {k: v/stotal for k, v in scripts.items()}
+    data[country][SCRIPT_PERC_KEY][type] = {k: v/stotal if stotal>0 else 0 for k, v in scripts.items()}
 
 with io.open('countrydata.json', 'w', newline='', encoding='utf8') as f:
     json.dump(data, f, indent=4)
